@@ -14,7 +14,12 @@
         </header>
 
         <section class="card">
-            <h2>Patient Records</h2>
+            <div class="table-header">
+                <h2>Patient Records</h2>
+                <!-- Search Bar Input -->
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Search patient by name or ID...">
+            </div>
+
             <table id="patientTable">
                 <thead>
                     <tr>
@@ -37,16 +42,23 @@
     </div>
 
     <script>
-        // Reads 1_Patient.csv and displays records
-        fetch('1_Patient.csv')
-            .then(response => response.text())
-            .then(data => {
-                const rows = data.split('\n').slice(1);
-                const tbody = document.querySelector('#patientTable tbody');
+        // Load data from CSV file
+        async function loadPatientData() {
+            try {
+                // Tries 1_Patient.csv, falls back to 1_Patient.csv.txt if needed
+                let response = await fetch('1_Patient.csv');
+                if (!response.ok) {
+                    response = await fetch('1_Patient.csv.txt');
+                }
                 
+                const data = await response.text();
+                const rows = data.trim().split('\n').slice(1); // Skip header row
+                const tbody = document.querySelector('#patientTable tbody');
+                tbody.innerHTML = ''; // Clear table
+
                 rows.forEach(row => {
                     const cols = row.split(',');
-                    if (cols.length >= 9) {
+                    if (cols.length >= 8) {
                         const tr = document.createElement('tr');
                         cols.forEach(col => {
                             const td = document.createElement('td');
@@ -56,7 +68,25 @@
                         tbody.appendChild(tr);
                     }
                 });
+            } catch (err) {
+                console.error('Error loading CSV data:', err);
+            }
+        }
+
+        // Live Search Filter Function
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll('#patientTable tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
             });
+        }
+
+        // Run on page load
+        loadPatientData();
     </script>
 </body>
 </html>
