@@ -9,15 +9,14 @@
 <body>
     <div class="container">
         <header>
-            <h1>🏥 Hospital Management System</h1>
+            <h1>Hospital Management System</h1>
             <p>Static Data Dashboard deployed via GitHub Pages</p>
         </header>
 
         <section class="card">
             <div class="table-header">
                 <h2>Patient Records</h2>
-                <!-- Search Bar Input -->
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Search patient by name or ID...">
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search patient by name or ID...">
             </div>
 
             <table id="patientTable">
@@ -42,19 +41,17 @@
     </div>
 
     <script>
-        // Load data from CSV file
         async function loadPatientData() {
             try {
-                // Tries 1_Patient.csv, falls back to 1_Patient.csv.txt if needed
                 let response = await fetch('1_Patient.csv');
                 if (!response.ok) {
                     response = await fetch('1_Patient.csv.txt');
                 }
                 
                 const data = await response.text();
-                const rows = data.trim().split('\n').slice(1); // Skip header row
+                const rows = data.trim().split('\n').slice(1);
                 const tbody = document.querySelector('#patientTable tbody');
-                tbody.innerHTML = ''; // Clear table
+                tbody.innerHTML = '';
 
                 rows.forEach(row => {
                     const cols = row.split(',');
@@ -73,7 +70,6 @@
             }
         }
 
-        // Live Search Filter Function
         function filterTable() {
             const input = document.getElementById('searchInput');
             const filter = input.value.toLowerCase();
@@ -85,7 +81,6 @@
             });
         }
 
-        // Run on page load
         loadPatientData();
     </script>
 </body>
