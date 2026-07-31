@@ -1,59 +1,45 @@
 package com.hospital.main;
 
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
 import com.hospital.service.HospitalDataManager;
-import com.hospital.model.Patient;
-import com.hospital.exception.RecordNotFoundException;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 
 public class Main {
-    public static void main(String[] args) {
-        // Initialize the manager service
+    public static void main(String[] args) throws IOException {
         HospitalDataManager manager = new HospitalDataManager();
+        manager.loadAllDataConcurrently("1_Patient.csv", "2_Doctor.csv", "3_Appoinment.csv", "4_Room.csv");
 
-        System.out.println("=========================================");
-        System.out.println("    HOSPITAL MANAGEMENT SYSTEM STARTUP   ");
-        System.out.println("=========================================\n");
+        // Simple built-in Java Web Server running on port 8080
+        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        
+        server.createContext("/", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                String response = "<html><head><style>" +
+                        "body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }" +
+                        "h1 { color: #2b6cb0; }" +
+                        "table { width: 100%; border-collapse: collapse; background: white; }" +
+                        "th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }" +
+                        "th { background: #3182ce; color: white; }" +
+                        "</style></head><body>" +
+                        "<h1>🏥 Hospital Management System (Java Backend)</h1>" +
+                        "<p>Loaded " + manager.getPatientList().size() + " patients via Multithreading.</p>" +
+                        "</body></html>";
+                
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            }
+        });
 
-        // 1. Multithreading: Concurrently load all 4 CSV datasets
-        System.out.println("[+] Loading CSV datasets using Multithreading...");
-        manager.loadAllDataConcurrently(
-                "1_Patient.csv", 
-                "2_Doctor.csv", 
-                "3_Appoinment.csv", 
-                "4_Room.csv"
-        );
-
-        System.out.println("\n-----------------------------------------");
-
-        // 2. Polymorphism: Display all patients loaded into memory
-        System.out.println("[+] Displaying Patient Records (Polymorphic Method Call):");
-        manager.displayAll();
-
-        System.out.println("-----------------------------------------");
-
-        // 3. Exception Handling: Searching for records with custom exception handling
-        System.out.println("[+] Testing Exception Handling:");
-
-        // Test Case A: Valid Search
-        try {
-            System.out.println("\nSearching for Patient ID 'P001'...");
-            Patient p = manager.findById("P001");
-            System.out.print("Found: ");
-            p.showDetails();
-        } catch (RecordNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
-        }
-
-        // Test Case B: Invalid Search (Triggers Exception)
-        try {
-            System.out.println("\nSearching for non-existent Patient ID 'P999'...");
-            Patient p = manager.findById("P999");
-            p.showDetails();
-        } catch (RecordNotFoundException e) {
-            System.err.println("Caught Expected Exception -> " + e.getMessage());
-        }
-
-        System.out.println("\n=========================================");
-        System.out.println("    SYSTEM EXECUTION FINISHED    ");
-        System.out.println("=========================================");
+        server.setExecutor(null);
+        System.out.println("Server started on http://localhost:8080");
+        server.start();
     }
 }
